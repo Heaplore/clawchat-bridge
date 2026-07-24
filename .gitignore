@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.trae
+.env.workbuddy
+*.log
+.DS_Store

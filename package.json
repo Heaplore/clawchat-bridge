@@ -1,0 +1,31 @@
+{
+  "name": "clawchat-bridge",
+  "version": "2.0.0",
+  "description": "Bridge service connecting ClawChat WebSocket protocol to LLM providers (TRAE-compatible)",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "start:trae": "node dist/server.js --env trae",
+    "start:workbuddy": "node dist/server.js --env workbuddy",
+    "dev": "tsx src/server.ts",
+    "dev:trae": "tsx src/server.ts --env trae",
+    "dev:workbuddy": "tsx src/server.ts --env workbuddy",
+    "watch": "tsx watch src/server.ts",
+    "activate": "tsx src/cli.ts activate",
+    "activate:trae": "tsx src/cli.ts --env trae activate",
+    "activate:workbuddy": "tsx src/cli.ts --env workbuddy activate"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "https-proxy-agent": "^9.1.0",
+    "node-fetch": "^3.3.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/ws": "^8.5.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
