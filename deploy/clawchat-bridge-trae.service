@@ -1,0 +1,16 @@
+[Unit]
+Description=ClawChat Bridge (TRAE instance)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/clawchat-bridge
+ExecStart=/usr/bin/node /opt/clawchat-bridge/watchdog.js --env trae
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/var/log/clawchat-bridge-trae.log
+StandardError=append:/var/log/clawchat-bridge-trae.err.log
+
+[Install]
+WantedBy=multi-user.target

@@ -11,10 +11,16 @@
     "dev": "tsx src/server.ts",
     "dev:trae": "tsx src/server.ts --env trae",
     "dev:workbuddy": "tsx src/server.ts --env workbuddy",
-    "watch": "tsx watch src/server.ts",
+    "dev:watch": "tsx watch src/server.ts",
     "activate": "tsx src/cli.ts activate",
     "activate:trae": "tsx src/cli.ts --env trae activate",
-    "activate:workbuddy": "tsx src/cli.ts --env workbuddy activate"
+    "activate:workbuddy": "tsx src/cli.ts --env workbuddy activate",
+    "watchdog": "node watchdog.js",
+    "watchdog:trae": "node watchdog.js --env trae",
+    "watchdog:workbuddy": "node watchdog.js --env workbuddy",
+    "watchdog:bg": "nohup node watchdog.js > watchdog.log 2>&1 &",
+    "watchdog:bg:trae": "nohup node watchdog.js --env trae > watchdog.trae.log 2>&1 &",
+    "watchdog:bg:workbuddy": "nohup node watchdog.js --env workbuddy > watchdog.workbuddy.log 2>&1 &"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

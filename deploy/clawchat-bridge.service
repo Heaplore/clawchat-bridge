@@ -1,0 +1,16 @@
+[Unit]
+Description=ClawChat Bridge (default)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/clawchat-bridge
+ExecStart=/usr/bin/node /opt/clawchat-bridge/watchdog.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/var/log/clawchat-bridge.log
+StandardError=append:/var/log/clawchat-bridge.err.log
+
+[Install]
+WantedBy=multi-user.target
