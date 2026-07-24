@@ -14,8 +14,8 @@
 - 📚 **会话管理**：自动上下文窗口裁剪，支持多会话
 - 🔌 **多 LLM 提供商**：豆包（Doubao）、DeepSeek、OpenAI 兼容协议
 - 💓 **心跳保活 & 自动重连**：指数退避重连策略
+- 🐕 **看门狗守护进程**：进程崩溃或健康检查超时 20 分钟自动拉起
 - 📡 **HTTP 代理支持**：自动识别 `HTTPS_PROXY` 环境变量
-- 🏗️ **多实例支持**：同一台电脑运行多个 Bridge（TRAE、WorkBuddy 等多平台）
 
 ## 架构
 
@@ -210,22 +210,9 @@ cd clawchat-bridge
 npm run start:workbuddy
 ```
 
-#### 方式 B：使用 Windows 批处理脚本（推荐 Windows 用户）
+#### 方式 B：使用 Windows 批处理脚本（见下文 `scripts/` 目录）
 
 双击 `start-trae.bat` 和 `start-workbuddy.bat` 即可分别启动。
-
-**批处理脚本功能：**
-- 自动检查 `node_modules`，如缺失则运行 `npm install`
-- 自动检查对应配置文件（`.env.trae` / `.env.workbuddy`），如缺失则提示从模板创建
-- 自动构建项目（如 `dist/` 目录不存在）
-- 启动对应实例
-
-激活脚本 `activate.bat`：
-```
-activate.bat trae YOUR_TRAE_CODE    # 激活 TRAE 实例
-activate.bat workbuddy YOUR_WB_CODE # 激活 WorkBuddy 实例
-activate.bat YOUR_CODE               # 激活默认实例
-```
 
 #### 方式 C：自定义实例
 
@@ -432,6 +419,105 @@ npx tsx src/send-test.ts [conversation_id] [message]
 
 ### 群聊中不回复
 确认 `REQUIRE_MENTION_IN_GROUP=true` 时是否 @了 Agent，或 Agent 是否在 `GROUP_ALLOWLIST` 中。
+
+---
+
+## 持久化运行（看门狗 Watchdog）
+
+Bridge 内置 `watchdog.js` 看门狗脚本，确保服务长期稳定运行：
+
+- **进程崩溃自动重启**：进程意外退出时指数退避自动拉起
+- **健康检查监控**：每 15 秒轮询 `/health` 接口
+- **超时强制重启**：连续 20 分钟健康检查失败，强制杀死并重启进程
+- **启动宽限期**：首次启动有 60 秒宽限期（避免启动过程中误判）
+
+### 方式一：前台运行（便于调试）
+
+```bash
+# 默认实例
+npm run watchdog
+
+# TRAE 实例
+npm run watchdog:trae
+
+# WorkBuddy 实例
+npm run watchdog:workbuddy
+```
+
+### 方式二：后台常驻（推荐生产环境）
+
+```bash
+# 默认实例
+npm run watchdog:bg
+
+# TRAE 实例
+npm run watchdog:bg:trae
+
+# WorkBuddy 实例
+npm run watchdog:bg:workbuddy
+```
+
+日志文件：
+- `watchdog.log` / `watchdog.trae.log` / `watchdog.workbuddy.log`
+
+### 方式三：Linux Systemd 服务（服务器部署）
+
+项目在 `deploy/` 目录提供了 systemd service 文件和安装脚本：
+
+```bash
+# 安装默认实例服务
+sudo ./deploy/install-systemd.sh
+
+# 安装 TRAE 实例服务
+sudo ./deploy/install-systemd.sh trae
+
+# 安装 WorkBuddy 实例服务
+sudo ./deploy/install-systemd.sh workbuddy
+```
+
+安装后使用 systemd 管理：
+
+```bash
+# 启动服务
+sudo systemctl start clawchat-bridge.service
+sudo systemctl start clawchat-bridge-trae.service
+
+# 开机自启
+sudo systemctl enable clawchat-bridge.service
+
+# 查看状态
+sudo systemctl status clawchat-bridge.service
+
+# 查看日志
+journalctl -u clawchat-bridge.service -f
+
+# 停止服务
+sudo systemctl stop clawchat-bridge.service
+```
+
+### 看门狗可配置参数
+
+通过命令行参数传递给 `watchdog.js`：
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `--env` / `-e` | 环境配置名（trae / workbuddy） | 无 |
+| `--port` / `-p` | 健康检查端口（自动从 .env 读取） | 3000 |
+| `--script` | 目标脚本路径 | `dist/server.js` |
+
+### 看门狗工作流程
+
+```
+watchdog.js
+    │
+    ├─ 启动子进程 (node dist/server.js)
+    │
+    ├─ 每 15s 检查 http://127.0.0.1:{port}/health
+    │   ├─ 健康 → 重置超时计时
+    │   └─ 不健康 → 累计时间，超过 20min → SIGTERM → 重启
+    │
+    └─ 监听子进程 exit 事件 → 指数退避重启 (2s → 4s → 8s ... → 60s)
+```
 
 ## License
 
